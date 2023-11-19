@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log Query Interface</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #queryInput {
+      margin-bottom: 10px;
+    }
+    #logResults {
+      white-space: pre-wrap;
+    }
+    .tableFixHead {
+        overflow-y: auto; /* make the table scrollable if height is more than 200 px  */
+        height: 200px; /* gives an initial height of 200px to the table */
+      }
+      .tableFixHead thead th {
+        position: sticky; /* make the table heads sticky */
+        top: 0px; /* table head will be placed from the top of the table and sticks to it */
+      }
+      table {
+        border-collapse: collapse; /* make the table borders collapse to each other */
+        width: 100%;
+      }
+      th,
+      td {
+        padding: 8px 16px;
+        border: 1px solid #ccc;
+      }
+      th {
+        background: #eee;
+      }
+  </style>
+</head>
+<body>
+  <h1>Log Query Interface</h1>
+  <label for="queryInput">Query:</label>
+  <label for="cars">Choose a log filter:</label>
+
+  <select name="levelFilter" id="levelFilter">
+    <option value="level">Level</option>
+    <option value="message">Message</option>
+    <option value="resourceId">ResourceId</option>
+    <option value="timestamp">Timestamp</option>
+    <option value="traceId">TraceId</option>
+    <option value="spanId">SpanId</option>
+    <option value="commit">Commit</option>
+    
+  </select>
+  <input type="text" id="queryInput" placeholder="Enter your query">
+  <button onclick="searchLogs()">Search</button>
+  <div id="logResults">
+   
+  </div>
+  <div class="tableFixHead" id="tableFixHead">
+    <table>
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Message</th>
+          <th>Resource Id</th>
+          <th>Timestamp</th>
+          <th>Trace Id</th>
+          <th>Span Id</th>
+          <th>Commit</th>
+          <th>MetaData</th>
+        </tr>
+      </thead>
+      <tbody id="tableData">
+       
+        
+      </tbody>
+    </table>
+  </div>
+  
+  <script>
+    async function searchLogs() {
+      const query = document.getElementById('queryInput').value;
+      var levelFilter =  document.getElementById("levelFilter").value;
+      console.log(levelFilter,"..levelFilter")
+      const response = await fetch(`http://localhost:3000/query?${levelFilter}=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      displayResults(data);
+    }
+
+    function displayResults(results) {
+       if(results && results.length>0){
+        const tableDataLog = document.getElementById('tableData');
+        const tableFixHead = document.getElementById('tableFixHead');
+        tableFixHead.style.display="block";
+        const logResults = document.getElementById('logResults');
+        logResults.style.display="none";
+        let row='';
+        results.forEach(function(obj) {
+             row+= `<tr>
+                <td>${obj.level}</td>
+                <td>${obj.message}</td>
+                <td>${obj.resourceId}</td>
+                <td>${obj.timestamp}</td>
+                <td>${obj.traceId}</td>
+                <td>${obj.spanId}</td>
+                <td>${obj.commit}</td>
+                <td>${obj.metadata.parentResourceId}</td>
+                </tr>`;
+
+        });
+        tableDataLog.innerHTML=row;
+        }
+        else{
+            const logResults = document.getElementById('logResults');
+            const tableFixHead = document.getElementById('tableFixHead');
+            logResults.style.display="block";
+            tableFixHead.style.display="none";
+            logResults.innerHTML="No data";
+        }
+    }
+  </script>
+</body>
+</html>
